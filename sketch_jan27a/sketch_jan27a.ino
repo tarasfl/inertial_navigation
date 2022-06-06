@@ -6,13 +6,14 @@ Adafruit_MPU6050 mpu;
 
 const int MPU = 0x68;
 float AccX, AccY, AccZ;
-float kalmanGain = 0.2;
+float kalmanGain = 0.5;
 
 // x coordinates
 float previous_ax = 0.0;
 float previous_vx = 0.0;
 float previous_x = 0.0;
 float current_ax, current_vx, current_x;
+float distance_x = 0;
 
 
 // y coordinates
@@ -34,7 +35,7 @@ void setup()
       delay(10);
     }
   }
-    mpu.setAccelerometerRange(MPU6050_RANGE_8_G);    
+    mpu.setAccelerometerRange(MPU6050_RANGE_2_G);    
   delay(20);
 
 
@@ -44,13 +45,12 @@ void loop()
 {
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
-  AccX = a.acceleration.x;
+  AccX = a.acceleration.x ;
   AccY = a.acceleration.y;
   AccZ = a.acceleration.z;
 
-  Serial.print(getDistanceX());
-  Serial.print(" ");
-  Serial.println(AccX);
+  Serial.println(getDistanceX());
+
   
 }
 int kalmanFilterAx(){
@@ -62,11 +62,12 @@ int getDistanceX(){
     
   current_vx = previous_vx + kalmanFilterAx();
   current_x = previous_x + current_vx;
-  return current_x;
+  distance_x += current_x;
+  return distance_x;
 }
 int kalmanFilterAy(){
     current_ay = previous_ay + kalmanGain*(AccY-previous_ay);
-    return current_ax;
+    return current_ay;
 }
 
 int getDistanceY(){
