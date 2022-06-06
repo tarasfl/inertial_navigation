@@ -7,13 +7,23 @@ Adafruit_MPU6050 mpu;
 const int MPU = 0x68;
 float AccX, AccY, AccZ;
 float kalmanGain = 0.2;
-float current_az, current_ax, current_vx, current_x;
+
+// x coordinates
 float previous_ax = 0.0;
 float previous_vx = 0.0;
 float previous_x = 0.0;
-float previous_az =16384.0;
-float distance = 0;
+float current_ax, current_vx, current_x;
 
+
+// y coordinates
+float previous_ay = 0.0;
+float previous_vy = 0.0;
+float previous_y = 0.0;
+float current_ay, current_vy, current_y;
+
+// z coordinates
+float current_az;
+float previous_az =16384.0;
 
 void setup() 
 {
@@ -24,11 +34,6 @@ void setup()
       delay(10);
     }
   }
-//  Wire.begin();                    
-//  Wire.beginTransmission(MPU);   
-//  Wire.write(0x6B);               
-//  Wire.write(0x00);             
-//  Wire.endTransmission(true);
     mpu.setAccelerometerRange(MPU6050_RANGE_8_G);    
   delay(20);
 
@@ -37,31 +42,36 @@ void setup()
 
 void loop() 
 {
-//  Wire.beginTransmission(MPU);
-//  Wire.write(0x3B); 
-//  Wire.endTransmission(false);
-//  Wire.requestFrom(MPU, 6, true);
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   AccX = a.acceleration.x;
-//  AccY = (Wire.read() << 8 | Wire.read()) / 16384.0;
-//  AccZ = (Wire.read() << 8 | Wire.read()) ;
- 
- // Serial.println(AccX);
-  current_vx = previous_vx + AccX;
-  current_x = previous_x + current_vx;
-  Serial.print(current_x);
+  AccY = a.acceleration.y;
+  AccZ = a.acceleration.z;
+
+  Serial.print(getDistanceX());
   Serial.print(" ");
   Serial.println(AccX);
   
 }
-int kalmanFilter(){
-    current_az = previous_az + kalmanGain*(AccZ-previous_az);
-    return current_az;
+int kalmanFilterAx(){
+    current_ax = previous_ax + kalmanGain*(AccX-previous_ax);
+    return current_ax;
 }
 
+int getDistanceX(){
+    
+  current_vx = previous_vx + kalmanFilterAx();
+  current_x = previous_x + current_vx;
+  return current_x;
+}
+int kalmanFilterAy(){
+    current_ay = previous_ay + kalmanGain*(AccY-previous_ay);
+    return current_ax;
+}
 
-int filterAx(){
-    current_ax = previous_ax + kalmanGain*(AccX-previous_ax);
-    return current_ax;  
+int getDistanceY(){
+    
+  current_vy = previous_vy + kalmanFilterAy();
+  current_y = previous_y + current_vy;
+  return current_y;
 }
